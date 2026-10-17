@@ -1,0 +1,19 @@
+{
+  "name": "api-avistamientos",
+  "version": "1.0.0",
+  "description": "API REST para registrar avistamientos de aves (ISW-2, Sesión 17)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "author": "Juan Sebastián Morales Herrera",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
