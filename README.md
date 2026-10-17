@@ -2,7 +2,7 @@
 
 API REST para registrar avistamientos de aves observadas en campo. Trabajo en clase de Ingeniería de Software 2 (ISW-2), Sesión 17.
 
-**Autor:** Juan Sebastián Morales Herrera
+**Autor:** Johan Sebastián Bonilla Gámez
 
 ## Tecnologías
 
