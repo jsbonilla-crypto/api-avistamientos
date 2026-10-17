@@ -22,7 +22,7 @@ API REST para registrar avistamientos de aves observadas en campo. Trabajo en cl
 2. Clonar el repositorio y entrar a la carpeta:
 
    ```bash
-   git clone <URL-DEL-REPOSITORIO>
+   git clone https://github.com/jsbonilla-crypto/api-avistamientos.git
    cd api-avistamientos
    ```
 
