@@ -1,188 +1,213 @@
-# API de avistamientos de aves
+  # API de avistamientos de aves
 
-API REST para registrar avistamientos de aves observadas en campo. Trabajo en clase de Ingeniería de Software 2 (ISW-2), Sesión 17.
+  API REST para registrar avistamientos de aves observadas en campo. Trabajo en clase de Ingeniería de Software 2 (ISW-2), Sesión 17.
 
-**Autor:** Johan Sebastián Bonilla Gámez
+  **Autor:** Johan Sebastián Bonilla Gámez
 
-## Tecnologías
+  ## Tecnologías
 
-- **Node.js** (versión 22.13 o superior)
-- **Express** para el servidor HTTP
-- **SQLite** con el módulo integrado de Node `node:sqlite` (no hay que instalar nada aparte para la base de datos)
-- **node:test** para las pruebas (también integrado en Node)
+  - **Node.js** (versión 22.13 o superior)
+  - **Express** para el servidor HTTP
+  - **SQLite** con el módulo integrado de Node `node:sqlite` (no hay que instalar nada aparte para la base de datos)
+  - **node:test** para las pruebas (también integrado en Node)
 
-## Instalación y ejecución
+  ## Instalación y ejecución
 
-1. Tener instalado [Node.js](https://nodejs.org/) 22.13 o superior. Para verificar:
+  1. Tener instalado [Node.js](https://nodejs.org/) 22.13 o superior. Para verificar:
 
-   ```bash
-   node --version
-   ```
+    ```bash
+    node --version
+    ```
 
-2. Clonar el repositorio y entrar a la carpeta:
+  2. Clonar el repositorio y entrar a la carpeta:
 
-   ```bash
-   git clone https://github.com/jsbonilla-crypto/api-avistamientos.git
-   cd api-avistamientos
-   ```
+    ```bash
+    git clone https://github.com/jsbonilla-crypto/api-avistamientos.git
+    cd api-avistamientos
+    ```
 
-3. Instalar las dependencias:
+  3. Instalar las dependencias:
 
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 
-4. Levantar la API:
+  4. Levantar la API:
 
-   ```bash
-   npm start
-   ```
+    ```bash
+    npm start
+    ```
 
-   La API queda escuchando en `http://localhost:3000`. La primera vez se crea automáticamente el archivo `avistamientos.db` con la tabla vacía.
+    La API queda escuchando en `http://localhost:3000`. La primera vez se crea automáticamente el archivo `avistamientos.db` con la tabla vacía.
 
-   Para usar otro puerto: `PORT=4000 npm start` (en PowerShell: `$env:PORT=4000; npm start`).
+    Para usar otro puerto: `PORT=4000 npm start` (en PowerShell: `$env:PORT=4000; npm start`).
 
-> Al arrancar, Node puede mostrar el aviso `ExperimentalWarning: SQLite is an experimental feature`. Es normal y no afecta el funcionamiento.
+  > Al arrancar, Node puede mostrar el aviso `ExperimentalWarning: SQLite is an experimental feature`. Es normal y no afecta el funcionamiento.
 
-## Pruebas
+  ## Pruebas
 
-```bash
-npm test
-```
+  ```bash
+  npm test
+  ```
 
-Se ejecutan pruebas unitarias (validación de datos) y de integración (peticiones HTTP reales a cada endpoint, usando una base de datos en memoria para no tocar `avistamientos.db`).
+  Se ejecutan pruebas unitarias (validación de datos) y de integración (peticiones HTTP reales a cada endpoint, usando una base de datos en memoria para no tocar `avistamientos.db`).
 
-## El recurso: avistamiento
+  ## Validaciones de datos
 
-```json
-{
-  "id": 1,
-  "especie": "colibrí",
-  "lugar": "Humedal La Conejera, Bogotá",
-  "fecha": "2026-09-29",
-  "observador": "Sebastián Morales"
-}
-```
+La API revisa que los datos enviados sean correctos antes de registrar o actualizar un avistamiento.
 
-| Campo        | Tipo   | Notas                                   |
-|--------------|--------|-----------------------------------------|
-| `id`         | número | Lo asigna el sistema                    |
-| `especie`    | texto  | Obligatorio                             |
-| `lugar`      | texto  | Obligatorio                             |
-| `fecha`      | texto  | Obligatorio, formato `AAAA-MM-DD`       |
-| `observador` | texto  | Obligatorio                             |
+Las validaciones que se implementaron son:
 
-## Endpoints
+- **Campos obligatorios:** especie, lugar, fecha y observador no pueden estar vacíos.
+- **Longitud de la especie:** debe tener mínimo 3 y máximo 50 caracteres.
+- **Formato de la fecha:** debe usar el formato `AAAA-MM-DD` y corresponder a una fecha real.
+- **Fecha futura:** no se permiten fechas posteriores al día actual.
+- **Formato del cuerpo:** los datos deben enviarse como un objeto JSON.
 
-| Método | Ruta                       | Qué hace                         | Respuestas         |
-|--------|----------------------------|----------------------------------|--------------------|
-| GET    | `/avistamientos`           | Lista todos los avistamientos    | 200                |
-| GET    | `/avistamientos/{id}`      | Muestra un avistamiento          | 200, 404           |
-| POST   | `/avistamientos`           | Registra un avistamiento         | 201, 400           |
-| PUT    | `/avistamientos/{id}`      | Reemplaza un avistamiento        | 200, 400, 404      |
-| DELETE | `/avistamientos/{id}`      | Elimina un avistamiento          | 204, 404           |
-| GET    | `/avistamientos/resumen`   | Cantidad por especie (bonus)     | 200                |
+Si los datos no cumplen estas condiciones, la API responde con el código HTTP `400` y muestra los errores encontrados.
 
-Los errores siempre responden en JSON, por ejemplo: `{ "error": "Avistamiento no encontrado" }`.
+## Cobertura del código
 
-## Ejemplos con curl
-
-> Los ejemplos están escritos para una terminal tipo bash (Linux, macOS o **Git Bash** en Windows). En PowerShell las comillas del JSON se manejan distinto, por eso se recomienda Git Bash.
-
-### Registrar un avistamiento — `POST /avistamientos`
+Para revisar la cobertura de las pruebas, se ejecuta el siguiente comando:
 
 ```bash
-curl -i -X POST http://localhost:3000/avistamientos \
-  -H "Content-Type: application/json" \
-  -d '{"especie":"colibrí","lugar":"Humedal La Conejera, Bogotá","fecha":"2026-09-29","observador":"Sebastián Morales"}'
+node --test --experimental-test-coverage
 ```
 
-Respuesta `201 Created`:
+Con las pruebas actuales se obtuvo una cobertura total del 98,31 %. Esto significa que las pruebas ejecutan la mayor parte del código y ayudan a comprobar que la API funcione correctamente.
 
-```json
-{"id":1,"especie":"colibrí","lugar":"Humedal La Conejera, Bogotá","fecha":"2026-09-29","observador":"Sebastián Morales"}
-```
+  ## El recurso: avistamiento
 
-Si faltan datos, responde `400 Bad Request`:
+  ```json
+  {
+    "id": 1,
+    "especie": "colibrí",
+    "lugar": "Humedal La Conejera, Bogotá",
+    "fecha": "2026-09-29",
+    "observador": "Sebastián Morales"
+  }
+  ```
 
-```bash
-curl -i -X POST http://localhost:3000/avistamientos \
-  -H "Content-Type: application/json" \
-  -d '{"especie":"tucán"}'
-```
+  | Campo        | Tipo   | Notas                                   |
+  |--------------|--------|-----------------------------------------|
+  | `id`         | número | Lo asigna el sistema                    |
+  | `especie`    | texto  | Obligatorio                             |
+  | `lugar`      | texto  | Obligatorio                             |
+  | `fecha`      | texto  | Obligatorio, formato `AAAA-MM-DD`       |
+  | `observador` | texto  | Obligatorio                             |
 
-```json
-{"error":"Datos inválidos","detalles":["Falta el campo \"lugar\" o está vacío","Falta el campo \"fecha\" o está vacío","Falta el campo \"observador\" o está vacío"]}
-```
+  ## Endpoints
 
-### Listar todos — `GET /avistamientos`
+  | Método | Ruta                       | Qué hace                         | Respuestas         |
+  |--------|----------------------------|----------------------------------|--------------------|
+  | GET    | `/avistamientos`           | Lista todos los avistamientos    | 200                |
+  | GET    | `/avistamientos/{id}`      | Muestra un avistamiento          | 200, 404           |
+  | POST   | `/avistamientos`           | Registra un avistamiento         | 201, 400           |
+  | PUT    | `/avistamientos/{id}`      | Reemplaza un avistamiento        | 200, 400, 404      |
+  | DELETE | `/avistamientos/{id}`      | Elimina un avistamiento          | 204, 404           |
+  | GET    | `/avistamientos/resumen`   | Cantidad por especie (bonus)     | 200                |
 
-```bash
-curl -i http://localhost:3000/avistamientos
-```
+  Los errores siempre responden en JSON, por ejemplo: `{ "error": "Avistamiento no encontrado" }`.
 
-Respuesta `200 OK` con un arreglo de avistamientos.
+  ## Ejemplos con curl
 
-### Ver uno — `GET /avistamientos/{id}`
+  > Los ejemplos están escritos para una terminal tipo bash (Linux, macOS o **Git Bash** en Windows). En PowerShell las comillas del JSON se manejan distinto, por eso se recomienda Git Bash.
 
-```bash
-curl -i http://localhost:3000/avistamientos/1
-```
+  ### Registrar un avistamiento — `POST /avistamientos`
 
-Respuesta `200 OK` con el avistamiento, o `404 Not Found` si no existe.
+  ```bash
+  curl -i -X POST http://localhost:3000/avistamientos \
+    -H "Content-Type: application/json" \
+    -d '{"especie":"colibrí","lugar":"Humedal La Conejera, Bogotá","fecha":"2026-09-29","observador":"Sebastián Morales"}'
+  ```
 
-### Actualizar — `PUT /avistamientos/{id}`
+  Respuesta `201 Created`:
 
-PUT reemplaza el recurso completo, así que se envían los cuatro campos.
+  ```json
+  {"id":1,"especie":"colibrí","lugar":"Humedal La Conejera, Bogotá","fecha":"2026-09-29","observador":"Sebastián Morales"}
+  ```
 
-```bash
-curl -i -X PUT http://localhost:3000/avistamientos/1 \
-  -H "Content-Type: application/json" \
-  -d '{"especie":"colibrí","lugar":"Parque Simón Bolívar","fecha":"2026-09-30","observador":"Sebastián Morales"}'
-```
+  Si faltan datos, responde `400 Bad Request`:
 
-Respuesta `200 OK` con el avistamiento actualizado, `404` si no existe o `400` si faltan datos.
+  ```bash
+  curl -i -X POST http://localhost:3000/avistamientos \
+    -H "Content-Type: application/json" \
+    -d '{"especie":"tucán"}'
+  ```
 
-### Eliminar — `DELETE /avistamientos/{id}`
+  ```json
+  {"error":"Datos inválidos","detalles":["Falta el campo \"lugar\" o está vacío","Falta el campo \"fecha\" o está vacío","Falta el campo \"observador\" o está vacío"]}
+  ```
 
-```bash
-curl -i -X DELETE http://localhost:3000/avistamientos/1
-```
+  ### Listar todos — `GET /avistamientos`
 
-Respuesta `204 No Content` (sin cuerpo), o `404 Not Found` si no existe.
+  ```bash
+  curl -i http://localhost:3000/avistamientos
+  ```
 
-### Resumen por especie (bonus) — `GET /avistamientos/resumen`
+  Respuesta `200 OK` con un arreglo de avistamientos.
 
-```bash
-curl -i http://localhost:3000/avistamientos/resumen
-```
+  ### Ver uno — `GET /avistamientos/{id}`
 
-Respuesta `200 OK`:
+  ```bash
+  curl -i http://localhost:3000/avistamientos/1
+  ```
 
-```json
-{"total":3,"porEspecie":[{"especie":"barranquero","cantidad":2},{"especie":"colibrí","cantidad":1}]}
-```
+  Respuesta `200 OK` con el avistamiento, o `404 Not Found` si no existe.
 
-## Estructura del proyecto
+  ### Actualizar — `PUT /avistamientos/{id}`
 
-```
-api-avistamientos/
-├── src/
-│   ├── app.js       # Rutas, validación y códigos de estado
-│   ├── db.js        # Conexión a SQLite y creación de la tabla
-│   └── server.js    # Punto de entrada: abre la base y levanta el servidor
-├── test/
-│   └── api.test.js  # Pruebas unitarias y de integración
-├── package.json
-└── README.md
-```
+  PUT reemplaza el recurso completo, así que se envían los cuatro campos.
 
-## Uso de IA
+  ```bash
+  curl -i -X PUT http://localhost:3000/avistamientos/1 \
+    -H "Content-Type: application/json" \
+    -d '{"especie":"colibrí","lugar":"Parque Simón Bolívar","fecha":"2026-09-30","observador":"Sebastián Morales"}'
+  ```
 
-Para este trabajo usé **Claude** (Anthropic), modelo **Claude Opus 5.5**, como apoyo para escribir el código, las pruebas y este README. Revisé y entiendo el código publicado.
+  Respuesta `200 OK` con el avistamiento actualizado, `404` si no existe o `400` si faltan datos.
 
-## Referencias
+  ### Eliminar — `DELETE /avistamientos/{id}`
 
-- [Documentación de Express](https://expressjs.com/)
-- [Documentación de `node:sqlite`](https://nodejs.org/api/sqlite.html)
-- [Documentación de `node:test`](https://nodejs.org/api/test.html)
+  ```bash
+  curl -i -X DELETE http://localhost:3000/avistamientos/1
+  ```
+
+  Respuesta `204 No Content` (sin cuerpo), o `404 Not Found` si no existe.
+
+  ### Resumen por especie (bonus) — `GET /avistamientos/resumen`
+
+  ```bash
+  curl -i http://localhost:3000/avistamientos/resumen
+  ```
+
+  Respuesta `200 OK`:
+
+  ```json
+  {"total":3,"porEspecie":[{"especie":"barranquero","cantidad":2},{"especie":"colibrí","cantidad":1}]}
+  ```
+
+
+  ## Estructura del proyecto
+
+  ```
+  api-avistamientos/
+  ├── src/
+  │   ├── app.js       # Rutas, validación y códigos de estado
+  │   ├── db.js        # Conexión a SQLite y creación de la tabla
+  │   └── server.js    # Punto de entrada: abre la base y levanta el servidor
+  ├── test/
+  │   └── api.test.js  # Pruebas unitarias y de integración
+  ├── package.json
+  └── README.md
+  ```
+
+  ## Uso de IA
+
+  Para este trabajo usé **Claude** (Anthropic), modelo **Claude Opus 5.5**, como apoyo para escribir el código, las pruebas y este README. Revisé y entiendo el código publicado.
+
+  ## Referencias
+
+  - [Documentación de Express](https://expressjs.com/)
+  - [Documentación de `node:sqlite`](https://nodejs.org/api/sqlite.html)
+  - [Documentación de `node:test`](https://nodejs.org/api/test.html)
