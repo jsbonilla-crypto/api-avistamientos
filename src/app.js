@@ -6,7 +6,7 @@ const CAMPOS = ['especie', 'lugar', 'fecha', 'observador'];
 // y que la fecha tenga formato AAAA-MM-DD y sea una fecha real.
 // Devuelve la lista de errores (vacía si todo está bien).
 
-function validarAvistamiento(body) {
+function validarAvistamiento(body, obtenerHoy = () => new Date()) {
   const errores = [];
 
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -41,7 +41,7 @@ function validarAvistamiento(body) {
     if (!fechaReal) {
       errores.push('La fecha debe tener el formato AAAA-MM-DD y ser válida');
     } else {
-      const hoy = new Date();
+      const hoy = obtenerHoy();
       const fechaHoy =
         `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
 
@@ -53,6 +53,7 @@ function validarAvistamiento(body) {
 
   return errores;
 }
+
 
 
 // Convierte el :id de la URL a número entero positivo; si no se puede, devuelve null.

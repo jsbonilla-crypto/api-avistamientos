@@ -8,12 +8,16 @@ const { crearApp, validarAvistamiento } = require('../src/app');
 
 let servidor;
 let base;
+let baseDatos;
 
 before(async () => {
-  const app = crearApp(abrirBaseDeDatos(':memory:'));
+  baseDatos = abrirBaseDeDatos(':memory:');
+  const app = crearApp(baseDatos);
+
   await new Promise((resolve) => {
     servidor = app.listen(0, resolve);
   });
+
   base = `http://localhost:${servidor.address().port}`;
 });
 
@@ -30,8 +34,11 @@ const colibri = {
   especie: 'colibrí',
   lugar: 'Humedal La Conejera, Bogotá',
   fecha: '2026-09-29',
-  observador: 'Sebastián Morales',
+  observador: 'Sebastián Bonilla',
 };
+
+// Stub de reloj: para las pruebas, hoy siempre es 21 de octubre de 2026.
+const relojFijo = () => new Date(2026, 9, 21, 12);
 
 // --- Pruebas unitarias de la validación ---
 
@@ -63,23 +70,23 @@ test('validación: rechaza especies con más de 50 caracteres', () => {
   assert.ok(errores.includes('La especie debe tener entre 3 y 50 caracteres'));
 });
 
-test('validación: rechaza fechas futuras', () => {
-  const manana = new Date();
-  manana.setDate(manana.getDate() + 1);
 
-  const fechaFutura = [
-    manana.getFullYear(),
-    String(manana.getMonth() + 1).padStart(2, '0'),
-    String(manana.getDate()).padStart(2, '0'),
-  ].join('-');
+test('validación: acepta la fecha de hoy', () => {
+  const avistamiento = { ...colibri, fecha: '2026-10-21' };
+  const errores = validarAvistamiento(avistamiento, relojFijo);
 
-  const errores = validarAvistamiento({
-    ...colibri,
-    fecha: fechaFutura,
-  });
-
-  assert.ok(errores.includes('La fecha no puede ser posterior al día de hoy'));
+  assert.deepEqual(errores, []);
 });
+
+test('validación: rechaza la fecha de mañana', () => {
+  const avistamiento = { ...colibri, fecha: '2026-10-22' };
+  const errores = validarAvistamiento(avistamiento, relojFijo);
+
+  assert.ok(
+    errores.includes('La fecha no puede ser posterior al día de hoy')
+  );
+});
+
 
 
 test('validación: acepta una especie de 3 caracteres', () => {
@@ -174,9 +181,31 @@ test('GET /avistamientos/resumen cuenta por especie', async () => {
   await pedir('/avistamientos', 'POST', { ...colibri, especie: 'barranquero' });
   await pedir('/avistamientos', 'POST', { ...colibri, especie: 'barranquero' });
 
+
   const res = await pedir('/avistamientos/resumen');
   assert.equal(res.status, 200);
   const resumen = await res.json();
   const barranquero = resumen.porEspecie.find((f) => f.especie === 'barranquero');
   assert.equal(barranquero.cantidad, 2);
+});
+
+
+test('GET a una ruta inexistente devuelve 404 en JSON', async () => {
+  const res = await pedir('/ruta-que-no-existe');
+
+  assert.equal(res.status, 404);
+
+  const respuesta = await res.json();
+  assert.equal(respuesta.error, 'Ruta no encontrada');
+});
+
+test('error interno: devuelve 500 cuando falla la base de datos', async () => {
+  baseDatos.close();
+
+  const res = await pedir('/avistamientos');
+
+  assert.equal(res.status, 500);
+
+  const respuesta = await res.json();
+  assert.equal(respuesta.error, 'Error interno del servidor');
 });
