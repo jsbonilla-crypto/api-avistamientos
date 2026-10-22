@@ -5,6 +5,7 @@ const CAMPOS = ['especie', 'lugar', 'fecha', 'observador'];
 // Revisa que el cuerpo traiga los cuatro campos como texto no vacío
 // y que la fecha tenga formato AAAA-MM-DD y sea una fecha real.
 // Devuelve la lista de errores (vacía si todo está bien).
+
 function validarAvistamiento(body) {
   const errores = [];
 
@@ -14,23 +15,45 @@ function validarAvistamiento(body) {
 
   for (const campo of CAMPOS) {
     const valor = body[campo];
+
     if (typeof valor !== 'string' || valor.trim() === '') {
       errores.push(`Falta el campo "${campo}" o está vacío`);
     }
   }
 
+  // La especie debe tener entre 3 y 50 caracteres
+  if (typeof body.especie === 'string' && body.especie.trim() !== '') {
+    const especie = body.especie.trim();
+
+    if (especie.length < 3 || especie.length > 50) {
+      errores.push('La especie debe tener entre 3 y 50 caracteres');
+    }
+  }
+
+  // La fecha debe existir, tener el formato correcto y no ser futura
   if (typeof body.fecha === 'string' && body.fecha.trim() !== '') {
     const fecha = body.fecha.trim();
     const formatoOk = /^\d{4}-\d{2}-\d{2}$/.test(fecha);
     const d = new Date(`${fecha}T00:00:00Z`);
-    const fechaReal = formatoOk && !isNaN(d) && d.toISOString().startsWith(fecha);
+    const fechaReal =
+      formatoOk && !isNaN(d) && d.toISOString().startsWith(fecha);
+
     if (!fechaReal) {
       errores.push('La fecha debe tener el formato AAAA-MM-DD y ser válida');
+    } else {
+      const hoy = new Date();
+      const fechaHoy =
+        `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+      if (fecha > fechaHoy) {
+        errores.push('La fecha no puede ser posterior al día de hoy');
+      }
     }
   }
 
   return errores;
 }
+
 
 // Convierte el :id de la URL a número entero positivo; si no se puede, devuelve null.
 function leerId(texto) {

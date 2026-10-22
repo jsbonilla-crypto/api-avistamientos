@@ -44,6 +44,69 @@ test('validación: detecta campos faltantes y fecha inválida', () => {
   assert.equal(errores.length, 3); // lugar, observador y fecha
 });
 
+
+test('validación: rechaza especies con menos de 3 caracteres', () => {
+  const errores = validarAvistamiento({
+    ...colibri,
+    especie: 'ab',
+  });
+
+  assert.ok(errores.includes('La especie debe tener entre 3 y 50 caracteres'));
+});
+
+test('validación: rechaza especies con más de 50 caracteres', () => {
+  const errores = validarAvistamiento({
+    ...colibri,
+    especie: 'a'.repeat(51),
+  });
+
+  assert.ok(errores.includes('La especie debe tener entre 3 y 50 caracteres'));
+});
+
+test('validación: rechaza fechas futuras', () => {
+  const manana = new Date();
+  manana.setDate(manana.getDate() + 1);
+
+  const fechaFutura = [
+    manana.getFullYear(),
+    String(manana.getMonth() + 1).padStart(2, '0'),
+    String(manana.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  const errores = validarAvistamiento({
+    ...colibri,
+    fecha: fechaFutura,
+  });
+
+  assert.ok(errores.includes('La fecha no puede ser posterior al día de hoy'));
+});
+
+
+test('validación: acepta una especie de 3 caracteres', () => {
+  const errores = validarAvistamiento({
+    ...colibri,
+    especie: 'ave',
+  });
+
+  assert.deepEqual(errores, []);
+});
+
+test('validación: acepta una especie de 50 caracteres', () => {
+  const errores = validarAvistamiento({
+    ...colibri,
+    especie: 'a'.repeat(50),
+  });
+
+  assert.deepEqual(errores, []);
+});
+
+test('validación: rechaza un cuerpo que no sea un objeto', () => {
+  assert.deepEqual(
+    validarAvistamiento(null),
+    ['El cuerpo debe ser un objeto JSON']
+  );
+});
+
 // --- Pruebas de integración de los endpoints ---
 
 test('GET /avistamientos devuelve 200 y una lista', async () => {
